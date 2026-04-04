@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supply Chain Load Form</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: linear-gradient(to bottom right, #a8e6cf, #d1fae5, #fef3c7);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border-radius: 15px;
+      padding: 30px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      width: 700px;
+      height: 85vh;
+      overflow-y: auto;
+    }
+    label { font-weight: bold; color: #333; }
+    .produce-card {
+      background: rgba(236,253,245,0.6);
+      border: 1px solid #a7f3d0;
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 10px;
+    }
+    .flag-box {
+      background: rgba(254,226,226,0.6);
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    .sub-box {
+      background: rgba(254,249,195,0.5);
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 12px;
+      margin-top: 8px;
+    }
+    .photo-preview { width: 80px; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid #d1d5db; }
+  </style>
+</head>
+<body>
+  <div class="glass p-6">
+    <div class="text-center mb-4">
+      <a href="https://farmersmarket-hub.github.io/Home/" target="_blank">
+        <img src="images/Market_logo.png" alt="Market Logo" class="mx-auto" style="max-height: 100px;">
+      </a>
+    </div>
+    <h2 class="text-2xl font-bold text-center mb-2 text-gray-900">Supply Chain Load Form</h2>
+    <p class="text-center italic text-sm text-gray-700 mb-6">Each vendor on the route completes this form on delivery day to confirm produce is ready for pickup.</p>
+
+    <form id="loadForm" class="space-y-4" onsubmit="submitForm(event)">
+
+      <div>
+        <label>Route ID <span class="text-red-500">*</span></label>
+        <input type="text" id="routeId" name="routeId" class="w-full p-2 border rounded bg-white" readonly placeholder="Auto-populated from Route Creation">
+      </div>
+
+      <div>
+        <label>Route Name</label>
+        <input type="text" id="routeName" name="routeName" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Vendor PIN <span class="text-red-500">*</span></label>
+        <input type="text" id="vendorPin" name="vendorPin" class="w-full p-2 border rounded bg-white" required>
+      </div>
+
+      <div>
+        <label>Vendor ID</label>
+        <input type="text" id="vendorId" name="vendorId" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Vendor Business Name</label>
+        <input type="text" id="vendorName" name="vendorName" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Pickup Address</label>
+        <input type="text" id="vendorAddress" name="vendorAddress" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Route Stop Number</label>
+        <input type="text" id="stopNumber" name="stopNumber" class="w-full p-2 border rounded bg-white" readonly placeholder="Auto-populated from Route Creation">
+      </div>
+
+      <div>
+        <label>Date</label>
+        <input type="date" id="loadDate" name="loadDate" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Time</label>
+        <input type="time" id="loadTime" name="loadTime" class="w-full p-2 border rounded bg-white" readonly>
+      </div>
+
+      <div>
+        <label>Estimated Pickup Time for this Stop
+          <span class="text-sm font-normal text-gray-500 block">(Auto-generated based on route stop order)</span>
+        </label>
+        <input type="text" id="estPickupTime" name="estPickupTime" class="w-full p-2 border rounded bg-white" readonly placeholder="Auto-generated">
+      </div>
+
+      <div>
+        <label>Ready for Pickup? <span class="text-red-500">*</span></label>
+        <select id="readyForPickup" name="readyForPickup" class="w-full p-2 border rounded bg-white" required onchange="toggleEstReady()">
+          <option value="">- Select -</option>
+          <option value="Yes">Yes</option>
+          <option value="No">No</option>
+        </select>
+      </div>
+
+      <div id="estReadySection" class="hidden">
+        <label>Estimated Ready Time</label>
+        <input type="time" id="estReadyTime" name="estReadyTime" class="w-full p-2 border rounded bg-white">
+      </div>
+
+      <hr class="border-gray-300">
+
+      <div>
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-gray-800">Produce Items for This Load</h3>
+          <button type="button" onclick="addProduceCard()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-4 py-1.5 rounded-full font-semibold">+ Add Item</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Items auto-populated from Route Creation. Confirm actual quantities, upload photos, and flag any adjustments.</p>
+      </div>
+
+      <div id="produceContainer"></div>
+
+      <hr class="border-gray-300">
+
+      <div>
+        <label>Storage Conditions <span class="text-red-500">*</span></label>
+        <select id="storageConditions" name="storageConditions" class="w-full p-2 border rounded bg-white" required>
+          <option value="">- Select -</option>
+          <option value="Ambient/Room Temperature">Ambient / Room Temperature</option>
+          <option value="Cooled/Refrigerated">Cooled / Refrigerated</option>
+          <option value="Frozen">Frozen</option>
+          <option value="Mixed">Mixed (multiple conditions)</option>
+        </select>
+      </div>
+
+      <div>
+        <label>Storage Notes (optional)</label>
+        <input type="text" id="storageNotes" name="storageNotes" class="w-full p-2 border rounded bg-white" placeholder="e.g., leafy greens kept in cooler, tomatoes at room temp">
+      </div>
+
+      <div>
+        <label>Packaging Confirmation — Fit for Transport? <span class="text-red-500">*</span></label>
+        <select id="packagingConfirmation" name="packagingConfirmation" class="w-full p-2 border rounded bg-white" required onchange="togglePackNotes()">
+          <option value="">- Select -</option>
+          <option value="Yes - All items properly packaged">Yes — All items properly packaged</option>
+          <option value="Partial - Some items need attention">Partial — Some items need attention</option>
+          <option value="No - Packaging issues present">No — Packaging issues present</option>
+        </select>
+      </div>
+
+      <div id="packNotesSection" class="hidden">
+        <label>Packaging Notes</label>
+        <textarea id="packagingNotes" name="packagingNotes" class="w-full p-2 border rounded bg-white" rows="2" placeholder="Describe packaging issues..."></textarea>
+      </div>
+
+      <div>
+        <label>Vendor Comments / Notes</label>
+        <textarea id="vendorComments" name="vendorComments" class="w-full p-2 border rounded bg-white" rows="3" placeholder="Any additional notes for the aggregator/driver..."></textarea>
+      </div>
+
+      <div class="text-center">
+        <button type="submit" class="submit-btn bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-6 rounded-full mt-4">Submit</button>
+      </div>
+      <div id="successMessage" class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 mt-2" role="alert"></div>
+    </form>
+  </div>
+
+  <script>
+    let produceCounter = 0;
+
+    const produceIdList = [
+      "PRD-001 African eggplants","PRD-002 Beans","PRD-003 Beets","PRD-004 Bell Pepper",
+      "PRD-005 Black Eyed Peas","PRD-006 Blueberries","PRD-007 Broccoli","PRD-008 Carrots",
+      "PRD-009 Cauliflower","PRD-010 Celery","PRD-011 Chilies","PRD-012 Cilantro",
+      "PRD-013 Collard Greens","PRD-014 Corn","PRD-015 Cucumbers","PRD-016 Garlic",
+      "PRD-017 Green Beans","PRD-018 Kale","PRD-019 Lettuce","PRD-020 Mchicha (African Spinach)",
+      "PRD-021 Nightshade","PRD-022 Onions","PRD-023 Peas","PRD-024 Potatoes",
+      "PRD-025 Pumpkin and Leaves","PRD-026 Radish","PRD-027 Strawberry",
+      "PRD-028 Sweet Potato Leaves","PRD-029 Swiss Chards","PRD-030 Tomatillo",
+      "PRD-031 Tomatoes","PRD-032 Zucchini","PRD-033 African Maize","PRD-099 Other"
+    ];
+
+    // Auto date/time
+    const now = new Date();
+    document.getElementById('loadDate').value = now.toLocaleDateString('en-CA', { timeZone: 'America/Los_Angeles' });
+    document.getElementById('loadTime').value = now.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles', hour12: false, hour: '2-digit', minute: '2-digit' });
+
+    function toggleEstReady() {
+      document.getElementById('estReadySection').classList.toggle('hidden', document.getElementById('readyForPickup').value !== 'No');
+    }
+
+    function togglePackNotes() {
+      const v = document.getElementById('packagingConfirmation').value;
+      document.getElementById('packNotesSection').classList.toggle('hidden', v.startsWith('Yes') || v === '');
+    }
+
+    function addProduceCard() {
+      produceCounter++;
+      const idx = produceCounter;
+      const container = document.getElementById('produceContainer');
+      const card = document.createElement('div');
+      card.className = 'produce-card';
+      card.id = `pCard-${idx}`;
+
+      card.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+          <span class="font-bold text-sm text-green-700">Item #${idx}</span>
+          <button type="button" onclick="document.getElementById('pCard-${idx}').remove()" class="text-red-400 hover:text-red-600 text-sm">✕</button>
+        </div>
+        <div class="space-y-3">
+
+          <div>
+            <label class="text-sm">Produce Item (auto-retrieved from Route Creation)</label>
+            <input type="text" id="pItem-${idx}" class="w-full p-2 border rounded bg-white text-sm" readonly placeholder="Auto-populated">
+          </div>
+
+          <div>
+            <label class="text-sm">Select Produce ID from List</label>
+            <select id="pId-${idx}" class="w-full p-2 border rounded bg-white text-sm">
+              <option value="">- Select Produce ID -</option>
+              ${produceIdList.map(p => `<option value="${p}">${p}</option>`).join('')}
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm">Expected Quantity for This Load (lbs)
+              <span class="text-xs font-normal text-gray-500 block">(From Route Creation)</span>
+            </label>
+            <input type="number" id="pExpQty-${idx}" class="w-full p-2 border rounded bg-white text-sm" readonly placeholder="Auto-populated">
+          </div>
+
+          <div>
+            <label class="text-sm">Expected Quantity (boxes)
+              <span class="text-xs font-normal text-gray-500 block">(From Route Creation)</span>
+            </label>
+            <input type="number" id="pExpBoxes-${idx}" class="w-full p-2 border rounded bg-white text-sm" readonly placeholder="Auto-populated">
+          </div>
+
+          <div>
+            <label class="text-sm">Produce Item Quantity for This Load (lbs) <span class="text-red-500">*</span></label>
+            <input type="number" step="0.01" id="pActQty-${idx}" class="w-full p-2 border rounded bg-white text-sm" placeholder="0" oninput="checkMismatch(${idx})">
+          </div>
+
+          <div>
+            <label class="text-sm">Produce Item Quantity for This Load (boxes)</label>
+            <input type="number" step="1" id="pActBoxes-${idx}" class="w-full p-2 border rounded bg-white text-sm" placeholder="0">
+          </div>
+
+          <!-- Adjustment flag -->
+          <div id="adjFlag-${idx}" class="hidden">
+            <div class="flag-box space-y-3">
+              <p class="text-sm font-bold text-red-700">⚠️ Quantity mismatch — <span id="adjDiff-${idx}"></span></p>
+
+              <div>
+                <label class="text-sm text-red-800">Reason for Missing Items</label>
+                <select id="pReason-${idx}" class="w-full p-2 border rounded bg-white text-sm" onchange="toggleOther(${idx})">
+                  <option value="">- Select Reason -</option>
+                  <option value="Crop failure">Crop failure</option>
+                  <option value="Weather damage">Weather damage</option>
+                  <option value="Pest/disease">Pest / Disease</option>
+                  <option value="Sick/unable to harvest">Sick / Unable to harvest</option>
+                  <option value="Sold elsewhere">Sold elsewhere</option>
+                  <option value="Quality not met">Quality not met</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+
+              <div id="otherSection-${idx}" class="hidden">
+                <label class="text-sm text-red-800">Specify Other Reason</label>
+                <input type="text" id="pOther-${idx}" class="w-full p-2 border rounded bg-white text-sm" placeholder="Explain reason...">
+              </div>
+
+              <div>
+                <label class="text-sm text-red-800">Substitution Items Included?</label>
+                <select id="pHasSub-${idx}" class="w-full p-2 border rounded bg-white text-sm" onchange="toggleSub(${idx})">
+                  <option value="No">No</option>
+                  <option value="Yes">Yes</option>
+                </select>
+              </div>
+
+              <div id="subSection-${idx}" class="hidden sub-box space-y-2">
+                <div>
+                  <label class="text-xs font-semibold">Substitution Item</label>
+                  <select id="pSubItem-${idx}" class="w-full p-1.5 border rounded bg-white text-sm">
+                    <option value="">- Select -</option>
+                    ${produceIdList.map(p => `<option value="${p}">${p}</option>`).join('')}
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold">Substitution Quantity (lbs)</label>
+                  <input type="number" step="0.01" id="pSubQty-${idx}" class="w-full p-1.5 border rounded bg-white text-sm" placeholder="0">
+                </div>
+                <div>
+                  <label class="text-xs font-semibold">Substitution Quantity (boxes)</label>
+                  <input type="number" step="1" id="pSubBoxes-${idx}" class="w-full p-1.5 border rounded bg-white text-sm" placeholder="0">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Photo -->
+          <div>
+            <label class="text-sm">Photo of Produce Item</label>
+            <input type="file" id="pPhoto-${idx}" accept="image/*" capture="environment" class="w-full p-2 border rounded bg-white text-sm" onchange="showPreview(${idx})">
+            <div id="pPreview-${idx}" class="mt-2"></div>
+          </div>
+
+        </div>
+      `;
+      container.appendChild(card);
+    }
+
+    function checkMismatch(idx) {
+      const exp = parseFloat(document.getElementById(`pExpQty-${idx}`).value) || 0;
+      const act = parseFloat(document.getElementById(`pActQty-${idx}`).value) || 0;
+      const flag = document.getElementById(`adjFlag-${idx}`);
+      if (exp > 0 && act < exp) {
+        flag.classList.remove('hidden');
+        document.getElementById(`adjDiff-${idx}`).textContent = `${(exp - act).toFixed(1)} lbs short of expected ${exp} lbs`;
+      } else {
+        flag.classList.add('hidden');
+      }
+    }
+
+    function toggleOther(idx) {
+      document.getElementById(`otherSection-${idx}`).classList.toggle('hidden', document.getElementById(`pReason-${idx}`).value !== 'Other');
+    }
+
+    function toggleSub(idx) {
+      document.getElementById(`subSection-${idx}`).classList.toggle('hidden', document.getElementById(`pHasSub-${idx}`).value !== 'Yes');
+    }
+
+    function showPreview(idx) {
+      const input = document.getElementById(`pPhoto-${idx}`);
+      const preview = document.getElementById(`pPreview-${idx}`);
+      preview.innerHTML = '';
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = document.createElement('img');
+          img.src = e.target.result;
+          img.className = 'photo-preview';
+          preview.appendChild(img);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function submitForm(e) {
+      e.preventDefault();
+      document.querySelector('.submit-btn').style.display = 'none';
+      const sm = document.getElementById('successMessage');
+      sm.innerText = '✅ Load form submitted successfully! The aggregator/driver has been notified.\nPlease REFRESH the page if you need to submit again.';
+      sm.style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
